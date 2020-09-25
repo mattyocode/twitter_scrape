@@ -2,7 +2,7 @@ import time
 import pandas as pd
 import tweepy
 import json
-from tweepy import API, OAuthHandler
+from tweepy import API, OAuthHandler, Cursor
 from tweepy import Stream
 from tweepy.streaming import StreamListener
 
@@ -10,37 +10,31 @@ from config import API_key, API_secret_key, Access_token, Secret_access_token
 
 class TwitterAuth:
 
-    def authenticate(API_key, API_secret_key, Access_token, Secret_access_token):
+    def authenticate(self):
         auth = OAuthHandler(API_key, API_secret_key)
         auth.set_access_token(Access_token, Secret_access_token)
-        print("auth", auth)
         return auth
 
 class TweepyInitialiser:
 
-    def initialize_tweepy_api():
-        auth = TwitterAuth.authenticate(API_key, API_secret_key, Access_token, Secret_access_token)
+    def initialize_tweepy_api(self):
+        auth = TwitterAuth().authenticate()
         api = tweepy.API(auth)
-        print("api", type(api))
         return api
 
-def tweets_from_user(username, count):
-    api = TweepyInitialiser.initialize_tweepy_api()
-    try:     
-        # Creation of query method using parameters
-        tweets = tweepy.Cursor(api.user_timeline,id=username).items(count)
+class TwitterClient:
 
-        # Pulling information from tweets iterable object
-        tweets_list = [[tweet.created_at, tweet.id, tweet.text] for tweet in tweets]
+    def __init__(self, user=None):
+        self.auth = TwitterAuth().authenticate()
+        self.twitter_client = API(self.auth)
+        self.twitter_user = user
 
-        # Creation of dataframe from tweets list
-        # Add or remove columns as you remove tweet information
-        tweets_df = pd.DataFrame(tweets_list)
-    except BaseException as e:
-        print('failed on_status,',str(e))
-        time.sleep(3)
+    def get_tweets_from_user_timeline(self, count):
+        tweets_list = []
+        for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
+            tweets_list.append(tweet)
+        return tweets_list
 
-    return tweets_df
 
 def tweets_from_search_query(text_query, count):
     #Most recent tweets containing text_query keyword
@@ -89,6 +83,9 @@ class MyListener(StreamListener):
         return True
  
     def on_error(self, status):
+        if status == 420:
+            #Return false if rate limit reached.
+            return False
         print(status)
         return True
  
@@ -101,4 +98,23 @@ def prettify_json(filename):
         tweet = json.loads(line) # load it as Python dict
         print(json.dumps(tweet, indent=4)) # pretty-print
 
-TweepyInitialiser.initialize_tweepy_api()
+# def tweets_from_user_timeline(username, count):
+#     api = TweepyInitialiser.initialize_tweepy_api()
+#     try:     
+#         # Creation of query method using parameters
+#         tweets = tweepy.Cursor(api.user_timeline,id=username).items(count)
+
+#         # Pulling information from tweets iterable object
+#         tweets_list = [[tweet.created_at, tweet.id, tweet.text] for tweet in tweets]
+
+#         # Creation of dataframe from tweets list
+#         # Add or remove columns as you remove tweet information
+#         tweets_df = pd.DataFrame(tweets_list)
+#     except BaseException as e:
+#         print('failed on_status,',str(e))
+#         time.sleep(3)
+
+#    return tweets_df
+
+twitter_client = TwitterClient('barackobama')
+print(twitter_client.get_tweets_from_user_timeline(1))
