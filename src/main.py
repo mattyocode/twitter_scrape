@@ -1,7 +1,8 @@
 import time
 import pandas as pd
-import tweepy
+import numpy
 import json
+import tweepy
 from tweepy import API, OAuthHandler, Cursor
 from tweepy import Stream
 from tweepy.streaming import StreamListener
@@ -33,31 +34,31 @@ class TwitterClient:
         tweets_list = []
         for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
             tweets_list.append(tweet)
+
         return tweets_list
 
 
-def tweets_from_search_query(text_query, count):
-    #Most recent tweets containing text_query keyword
-    api = TweepyInitialiser.initialize_tweepy_api()
-    try:
-        # Creation of query method using parameters
-        tweets = tweepy.Cursor(api.search,q=text_query).items(count)
+    def tweets_from_search_query(self, text_query, count):
+        #Most recent tweets containing text_query keyword
+        try:
+            # Creation of query method using parameters
+            tweets = tweepy.Cursor(api.search,q=text_query).items(count)
+            
+            # Pulling information from tweets iterable object
+            tweets_list = [[tweet.created_at, tweet.text, tweet.user, 
+            tweet.favorite_count] for tweet in tweets]
         
-        # Pulling information from tweets iterable object
-        tweets_list = [[tweet.created_at, tweet.text, tweet.user, 
-        tweet.favorite_count] for tweet in tweets]
-    
-    except BaseException as e:
-        print('failed on_status,',str(e))
-        time.sleep(3)
-    
-    return tweets_list
+        except BaseException as e:
+            print('failed on_status,',str(e))
+            time.sleep(3)
+        
+        return tweets_list
 
-def create_dataframe_from_tweetslist(tweets_list):
-    # Creation of dataframe from tweets list
-    # Add or remove columns as you remove tweet information
-    tweets_df = pd.DataFrame(tweets_list)
-    return tweets_df
+    def create_dataframe_from_tweetslist(self, tweets_list):
+        # Creation of dataframe from tweets list
+        # Add or remove columns as you remove tweet information
+        tweets_df = pd.DataFrame(tweets_list)
+        return tweets_df
 
 class TwitterStreamer:
 
@@ -88,33 +89,13 @@ class MyListener(StreamListener):
             return False
         print(status)
         return True
- 
-# twitter_stream = Stream(auth, MyListener())
-# twitter_stream.filter(track=['#python'])
 
-def prettify_json(filename):
-    with open(filename, 'r') as f:
-        line = f.readline() # read only the first tweet/line
-        tweet = json.loads(line) # load it as Python dict
-        print(json.dumps(tweet, indent=4)) # pretty-print
+# def prettify_json(filename):
+#     with open(filename, 'r') as f:
+#         line = f.readline() # read only the first tweet/line
+#         tweet = json.loads(line) # load it as Python dict
+#         print(json.dumps(tweet, indent=4)) # pretty-print
 
-# def tweets_from_user_timeline(username, count):
-#     api = TweepyInitialiser.initialize_tweepy_api()
-#     try:     
-#         # Creation of query method using parameters
-#         tweets = tweepy.Cursor(api.user_timeline,id=username).items(count)
-
-#         # Pulling information from tweets iterable object
-#         tweets_list = [[tweet.created_at, tweet.id, tweet.text] for tweet in tweets]
-
-#         # Creation of dataframe from tweets list
-#         # Add or remove columns as you remove tweet information
-#         tweets_df = pd.DataFrame(tweets_list)
-#     except BaseException as e:
-#         print('failed on_status,',str(e))
-#         time.sleep(3)
-
-#    return tweets_df
 
 twitter_client = TwitterClient('barackobama')
 print(twitter_client.get_tweets_from_user_timeline(1))
