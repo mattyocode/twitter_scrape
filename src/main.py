@@ -1,7 +1,10 @@
 import time
 import pandas as pd
 import tweepy
+import json
 from tweepy import API, OAuthHandler
+from tweepy import Stream
+from tweepy.streaming import StreamListener
 
 from config import API_key, API_secret_key, Access_token, Secret_access_token
 
@@ -36,17 +39,43 @@ def tweets_from_search_query(text_query, count):
         tweets = tweepy.Cursor(api.search,q=text_query).items(count)
         
         # Pulling information from tweets iterable object
-        tweets_list = [[tweet.created_at, tweet.id, tweet.text] for tweet in tweets]
-        
-        # Creation of dataframe from tweets list
-        # Add or remove columns as you remove tweet information
-        tweets_df = pd.DataFrame(tweets_list)
+        tweets_list = [[tweet.created_at, tweet.text, tweet.user, 
+        tweet.favorite_count] for tweet in tweets]
     
     except BaseException as e:
         print('failed on_status,',str(e))
         time.sleep(3)
     
+    return tweets_list
+
+def create_dataframe_from_tweetslist(tweets_list):
+    # Creation of dataframe from tweets list
+    # Add or remove columns as you remove tweet information
+    tweets_df = pd.DataFrame(tweets_list)
     return tweets_df
 
-x = tweets_from_search_query('covid', 20)
-print(x)
+class MyListener(StreamListener):
+ 
+    def on_data(self, data):
+        try:
+            with open('python.json', 'a') as f:
+                f.write(data)
+                return True
+        except BaseException as e:
+            print("Error on_data: %s" % str(e))
+        return True
+ 
+    def on_error(self, status):
+        print(status)
+        return True
+ 
+# twitter_stream = Stream(auth, MyListener())
+# twitter_stream.filter(track=['#python'])
+
+def prettify_json(filename):
+    with open(filename, 'r') as f:
+        line = f.readline() # read only the first tweet/line
+        tweet = json.loads(line) # load it as Python dict
+        print(json.dumps(tweet, indent=4)) # pretty-print
+
+prettify_json('python.json')
