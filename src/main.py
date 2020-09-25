@@ -11,15 +11,17 @@ from config import API_key, API_secret_key, Access_token, Secret_access_token
 def authenticate(API_key, API_secret_key, Access_token, Secret_access_token):
     auth = OAuthHandler(API_key, API_secret_key)
     auth.set_access_token(Access_token, Secret_access_token)
+    print("auth", auth)
     return auth
 
 def initialize_tweepy_api():
     auth = authenticate(API_key, API_secret_key, Access_token, Secret_access_token)
     api = tweepy.API(auth)
+    print("api", type(api))
     return api
 
 def tweets_from_user(username, count):
-
+    api = initialize_tweepy_api()
     try:     
         # Creation of query method using parameters
         tweets = tweepy.Cursor(api.user_timeline,id=username).items(count)
@@ -59,6 +61,14 @@ def create_dataframe_from_tweetslist(tweets_list):
     tweets_df = pd.DataFrame(tweets_list)
     return tweets_df
 
+class TwitterStreamer:
+
+    def stream_tweets(self, scaped_to_filename, query_list):
+    api = initialize_tweepy_api()   
+    listener = MyListener()
+    stream = Stream(auth, listener)
+    stream.filter(track=query_list)
+
 class MyListener(StreamListener):
  
     def on_data(self, data):
@@ -83,5 +93,4 @@ def prettify_json(filename):
         tweet = json.loads(line) # load it as Python dict
         print(json.dumps(tweet, indent=4)) # pretty-print
 
-x = create_dataframe_from_tweetslist(tweets_from_search_query('work', 20))
-print(x)
+initialize_tweepy_api()
