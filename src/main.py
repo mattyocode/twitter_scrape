@@ -8,10 +8,15 @@ from tweepy.streaming import StreamListener
 
 from config import API_key, API_secret_key, Access_token, Secret_access_token
 
-auth = OAuthHandler(API_key, API_secret_key)
-auth.set_access_token(Access_token, Secret_access_token)
- 
-api = tweepy.API(auth)
+def authenticate(API_key, API_secret_key, Access_token, Secret_access_token):
+    auth = OAuthHandler(API_key, API_secret_key)
+    auth.set_access_token(Access_token, Secret_access_token)
+    return auth
+
+def initialize_tweepy_api():
+    auth = authenticate(API_key, API_secret_key, Access_token, Secret_access_token)
+    api = tweepy.API(auth)
+    return api
 
 def tweets_from_user(username, count):
 
@@ -33,7 +38,7 @@ def tweets_from_user(username, count):
 
 def tweets_from_search_query(text_query, count):
     #Most recent tweets containing text_query keyword
-
+    api = initialize_tweepy_api()
     try:
         # Creation of query method using parameters
         tweets = tweepy.Cursor(api.search,q=text_query).items(count)
@@ -78,4 +83,5 @@ def prettify_json(filename):
         tweet = json.loads(line) # load it as Python dict
         print(json.dumps(tweet, indent=4)) # pretty-print
 
-prettify_json('python.json')
+x = create_dataframe_from_tweetslist(tweets_from_search_query('work', 20))
+print(x)
