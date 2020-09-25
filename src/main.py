@@ -8,20 +8,24 @@ from tweepy.streaming import StreamListener
 
 from config import API_key, API_secret_key, Access_token, Secret_access_token
 
-def authenticate(API_key, API_secret_key, Access_token, Secret_access_token):
-    auth = OAuthHandler(API_key, API_secret_key)
-    auth.set_access_token(Access_token, Secret_access_token)
-    print("auth", auth)
-    return auth
+class TwitterAuth:
 
-def initialize_tweepy_api():
-    auth = authenticate(API_key, API_secret_key, Access_token, Secret_access_token)
-    api = tweepy.API(auth)
-    print("api", type(api))
-    return api
+    def authenticate(API_key, API_secret_key, Access_token, Secret_access_token):
+        auth = OAuthHandler(API_key, API_secret_key)
+        auth.set_access_token(Access_token, Secret_access_token)
+        print("auth", auth)
+        return auth
+
+class TweepyInitialiser:
+
+    def initialize_tweepy_api():
+        auth = TwitterAuth.authenticate(API_key, API_secret_key, Access_token, Secret_access_token)
+        api = tweepy.API(auth)
+        print("api", type(api))
+        return api
 
 def tweets_from_user(username, count):
-    api = initialize_tweepy_api()
+    api = TweepyInitialiser.initialize_tweepy_api()
     try:     
         # Creation of query method using parameters
         tweets = tweepy.Cursor(api.user_timeline,id=username).items(count)
@@ -40,7 +44,7 @@ def tweets_from_user(username, count):
 
 def tweets_from_search_query(text_query, count):
     #Most recent tweets containing text_query keyword
-    api = initialize_tweepy_api()
+    api = TweepyInitialiser.initialize_tweepy_api()
     try:
         # Creation of query method using parameters
         tweets = tweepy.Cursor(api.search,q=text_query).items(count)
@@ -63,11 +67,15 @@ def create_dataframe_from_tweetslist(tweets_list):
 
 class TwitterStreamer:
 
+    def __init__(self):
+        self.twitter_auth = TwitterAuth()
+
     def stream_tweets(self, scaped_to_filename, query_list):
-    api = initialize_tweepy_api()   
-    listener = MyListener()
-    stream = Stream(auth, listener)
-    stream.filter(track=query_list)
+        api = TweepyInitialiser.initialize_tweepy_api()   
+        listener = MyListener()
+
+        stream = Stream(auth, listener)
+        stream.filter(track=query_list)
 
 class MyListener(StreamListener):
  
@@ -93,4 +101,4 @@ def prettify_json(filename):
         tweet = json.loads(line) # load it as Python dict
         print(json.dumps(tweet, indent=4)) # pretty-print
 
-initialize_tweepy_api()
+TweepyInitialiser.initialize_tweepy_api()
