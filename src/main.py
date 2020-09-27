@@ -3,11 +3,14 @@ import pandas as pd
 import numpy
 import json
 import tweepy
+from matplotlib import pyplot as plt
+import numpy as np
 from tweepy import API, OAuthHandler, Cursor
 from tweepy import Stream
 from tweepy.streaming import StreamListener
 
 from config import API_key, API_secret_key, Access_token, Secret_access_token
+from tweet_analyser import TweetAnalyser
 
 class TwitterAuth:
 
@@ -16,12 +19,12 @@ class TwitterAuth:
         auth.set_access_token(Access_token, Secret_access_token)
         return auth
 
-class TweepyInitialiser:
+# class TweepyInitialiser:
 
-    def initialize_tweepy_api(self):
-        auth = TwitterAuth().authenticate()
-        api = tweepy.API(auth)
-        return api
+#     def initialize_tweepy_api(self):
+#         auth = TwitterAuth().authenticate()
+#         api = tweepy.API(auth)
+#         return api
 
 class TwitterClient:
 
@@ -29,6 +32,9 @@ class TwitterClient:
         self.auth = TwitterAuth().authenticate()
         self.twitter_client = API(self.auth)
         self.twitter_user = user
+
+    def get_twitter_client_api(self):
+        return self.twitter_client
 
     def get_tweets_from_user_timeline(self, count):
         tweets_list = []
@@ -53,8 +59,6 @@ class TwitterClient:
             time.sleep(3)
         
         return tweets_list
-
-
 
 class TwitterStreamer:
 
@@ -92,6 +96,25 @@ class MyListener(StreamListener):
 #         tweet = json.loads(line) # load it as Python dict
 #         print(json.dumps(tweet, indent=4)) # pretty-print
 
+if __name__ == '__main__':
+
+    twitter_client = TwitterClient()
+    tweet_analyser = TweetAnalyser()
+
+    api = twitter_client.get_twitter_client_api()
+
+    tweets_list = api.user_timeline(screen_name="mrjamesob", count=200)
+
+    df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
+
+    # print(np.max(df['likes']))
+
+    #Likes over time using pd.Series
+    time_of_likes = pd.Series(data=df['likes'].values, index=df['date'])
+    time_of_likes.plot(figsize=(16,4), color='g')
+    plt.show()
+
+#    print(dir(tweet_list[0]))
 
 # twitter_client = TwitterClient('barackobama')
 # print(twitter_client.get_tweets_from_user_timeline(1))
