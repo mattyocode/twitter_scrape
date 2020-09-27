@@ -54,11 +54,7 @@ class TwitterClient:
         
         return tweets_list
 
-    def create_dataframe_from_tweetslist(self, tweets_list):
-        # Creation of dataframe from tweets list
-        # Add or remove columns as you remove tweet information
-        tweets_df = pd.DataFrame(tweets_list)
-        return tweets_df
+
 
 class TwitterStreamer:
 
@@ -97,5 +93,6 @@ class MyListener(StreamListener):
 #         print(json.dumps(tweet, indent=4)) # pretty-print
 
 
-twitter_client = TwitterClient('barackobama')
-print(twitter_client.get_tweets_from_user_timeline(1))
+# twitter_client = TwitterClient('barackobama')
+# print(twitter_client.get_tweets_from_user_timeline(1))
+
