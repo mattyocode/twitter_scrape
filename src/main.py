@@ -36,13 +36,16 @@ class TwitterClient:
     def get_twitter_client_api(self):
         return self.twitter_client
 
-    def get_tweets_from_user_timeline(self, count):
+    def get_tweets_from_user_timeline_to_array(self, count):
         tweets_list = []
         for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
             tweets_list.append(tweet)
 
         return tweets_list
 
+    def get_tweets_from_user_timeline_to_json(self, count):
+        for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
+            self.process_or_store(tweet._json)
 
     def tweets_from_search_query(self, text_query, count):
         #Most recent tweets containing text_query keyword
@@ -59,6 +62,15 @@ class TwitterClient:
             time.sleep(3)
         
         return tweets_list
+
+    def process_or_store(tweet):
+        print(json.dumps(tweet))
+
+    def prettify_json(filename):
+        with open(filename, 'r') as f:
+            line = f.readline() # read only the first tweet/line
+            tweet = json.loads(line) # load it as Python dict
+            print(json.dumps(tweet, indent=4)) # pretty-print
 
 class TwitterStreamer:
 
@@ -90,11 +102,7 @@ class MyListener(StreamListener):
         print(status)
         return True
 
-# def prettify_json(filename):
-#     with open(filename, 'r') as f:
-#         line = f.readline() # read only the first tweet/line
-#         tweet = json.loads(line) # load it as Python dict
-#         print(json.dumps(tweet, indent=4)) # pretty-print
+
 
 if __name__ == '__main__':
 
@@ -106,13 +114,16 @@ if __name__ == '__main__':
     tweets_list = api.user_timeline(screen_name="mrjamesob", count=200)
 
     df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
+    df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
+
+    print(df.head(10))
 
     # print(np.max(df['likes']))
 
     #Likes over time using pd.Series
-    time_of_likes = pd.Series(data=df['likes'].values, index=df['date'])
-    time_of_likes.plot(figsize=(16,4), color='g')
-    plt.show()
+    # time_of_likes = pd.Series(data=df['likes'].values, index=df['date'])
+    # time_of_likes.plot(figsize=(16,4), color='g')
+    # plt.show()
 
 #    print(dir(tweet_list[0]))
 
