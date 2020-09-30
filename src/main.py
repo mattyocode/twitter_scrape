@@ -39,7 +39,8 @@ class TwitterClient:
     def get_tweets_from_user_timeline_to_array(self, count):
         tweets_list = []
         for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
-            tweets_list.append(tweet)
+            if not tweet.retweeted and 'RT @' not in tweet.text:
+                tweets_list.append(tweet)
 
         return tweets_list
 
@@ -106,12 +107,14 @@ class MyListener(StreamListener):
 
 if __name__ == '__main__':
 
-    twitter_client = TwitterClient()
+    twitter_client = TwitterClient("mrjamesob")
     tweet_analyser = TweetAnalyser()
 
     api = twitter_client.get_twitter_client_api()
 
-    tweets_list = api.user_timeline(screen_name="mrjamesob", count=200)
+    tweets_list = twitter_client.get_tweets_from_user_timeline_to_array(20)
+
+    # tweets_list = api.user_timeline(screen_name="mrjamesob", count=200)
 
     df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
     df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
