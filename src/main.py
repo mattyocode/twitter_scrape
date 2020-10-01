@@ -19,19 +19,13 @@ class TwitterAuth:
         auth.set_access_token(Access_token, Secret_access_token)
         return auth
 
-# class TweepyInitialiser:
-
-#     def initialize_tweepy_api(self):
-#         auth = TwitterAuth().authenticate()
-#         api = tweepy.API(auth)
-#         return api
-
 class TwitterClient:
 
-    def __init__(self, user=None):
+    def __init__(self, user=None, filename=None):
         self.auth = TwitterAuth().authenticate()
         self.twitter_client = API(self.auth)
         self.twitter_user = user
+        self.json_file = filename
 
     def get_twitter_client_api(self):
         return self.twitter_client
@@ -46,32 +40,41 @@ class TwitterClient:
 
     def get_tweets_from_user_timeline_to_json(self, count):
         for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
-            self.process_or_store(tweet._json)
+            self.store_as_json(tweet._json)
 
     def tweets_from_search_query(self, text_query, count):
+        tweets_list = []
         #Most recent tweets containing text_query keyword
         try:
             # Creation of query method using parameters
-            tweets = tweepy.Cursor(api.search,q=text_query).items(count)
+            for tweet in Cursor(self.twitter_client.search,q=text_query,lang='en').items(count):
+                if self.tweet_filtering_criteria(tweet):
+                    tweets_list.append(tweet)
+                    self.store_as_json(tweet._json)
             
             # Pulling information from tweets iterable object
-            tweets_list = [[tweet.created_at, tweet.text, tweet.user, 
-            tweet.favorite_count] for tweet in tweets]
+            # tweets_list = [[tweet.created_at, tweet.text, tweet.user, 
+            # tweet.favorite_count] for tweet in tweets]
         
         except BaseException as e:
-            print('failed on_status,',str(e))
+            print('failed on_status:',str(e))
             time.sleep(3)
         
         return tweets_list
 
-    def process_or_store(tweet):
-        print(json.dumps(tweet))
+    def tweet_filtering_criteria(self, tweet):
+        if not tweet.retweeted and 'RT @' not in tweet.text:
+            return True
+
+    def store_as_json(self, tweet):
+        with open(self.json_file, 'a') as f:
+                json.dump(tweet, f)
 
     def prettify_json(filename):
         with open(filename, 'r') as f:
             line = f.readline() # read only the first tweet/line
             tweet = json.loads(line) # load it as Python dict
-            print(json.dumps(tweet, indent=4)) # pretty-print
+            print(json.dump(tweet, indent=4)) # pretty-print
 
 class TwitterStreamer:
 
@@ -107,29 +110,15 @@ class MyListener(StreamListener):
 
 if __name__ == '__main__':
 
-    twitter_client = TwitterClient("mrjamesob")
+    twitter_client = TwitterClient(filename="test_store.json")
     tweet_analyser = TweetAnalyser()
 
     api = twitter_client.get_twitter_client_api()
 
-    tweets_list = twitter_client.get_tweets_from_user_timeline_to_array(20)
-
-    # tweets_list = api.user_timeline(screen_name="mrjamesob", count=200)
+    tweets_list = twitter_client.tweets_from_search_query('watching', 25)
 
     df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
     df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
 
-    print(df.head(10))
-
-    # print(np.max(df['likes']))
-
-    #Likes over time using pd.Series
-    # time_of_likes = pd.Series(data=df['likes'].values, index=df['date'])
-    # time_of_likes.plot(figsize=(16,4), color='g')
-    # plt.show()
-
-#    print(dir(tweet_list[0]))
-
-# twitter_client = TwitterClient('barackobama')
-# print(twitter_client.get_tweets_from_user_timeline(1))
+    print(df.head(20))
 

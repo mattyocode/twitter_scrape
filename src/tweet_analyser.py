@@ -5,11 +5,46 @@ import tweepy
 import re
 from textblob import TextBlob
 
+class TweetCleaner:
+    
+    def tokenize(self, s):
+        emoticons_str = r"""
+        (?:
+            [:=;] # Eyes
+            [oO\-]? # Nose (optional)
+            [D\)\]\(\]/\\OpP] # Mouth
+        )"""
+    
+        regex_str = [
+        emoticons_str,
+        r'<[^>]+>', # HTML tags
+        r'(?:@[\w_]+)', # @-mentions
+        r"(?:\#+[\w_]+[\w\'_\-]*[\w_]+)", # hash-tags
+        r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+', # URLs
+    
+        r'(?:(?:\d+,?)+(?:\.?\d+)?)', # numbers
+        r"(?:[a-z][a-z'\-_]+[a-z])", # words with - and '
+        r'(?:[\w_]+)', # other words
+        r'(?:\S)' # anything else
+        ]
+        tokens_re = re.compile(r'('+'|'.join(regex_str)+')', re.VERBOSE | re.IGNORECASE)
+        emoticon_re = re.compile(r'^'+emoticons_str+'$', re.VERBOSE | re.IGNORECASE)
+        return tokens_re.findall(s)
+    
+    def preprocess(self, s, lowercase=False):
+        tokens = self.tokenize(s)
+        if lowercase:
+            tokens = [token if emoticon_re.search(token) else token.lower() for token in tokens]
+        return ' '.join(tokens)
 
 class TweetAnalyser:
 
+    def __init__(self):
+        self.tweet_cleaner = TweetCleaner()
+
     def clean_tweet(self, tweet):
-        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
+        return self.tweet_cleaner.preprocess(tweet)
+        # return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
 
     def analyse_sentiment(self, tweet):
         analysis = TextBlob(self.clean_tweet(tweet))
