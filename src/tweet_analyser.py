@@ -3,6 +3,9 @@ import numpy as np
 import json
 import tweepy
 import re
+from pprint import pprint
+import operator
+from collections import Counter
 from textblob import TextBlob
 
 class TweetCleaner:
@@ -35,7 +38,7 @@ class TweetCleaner:
         tokens = self.tokenize(s)
         if lowercase:
             tokens = [token if emoticon_re.search(token) else token.lower() for token in tokens]
-        return ' '.join(tokens)
+        return tokens
 
 class TweetAnalyser:
 
@@ -43,7 +46,7 @@ class TweetAnalyser:
         self.tweet_cleaner = TweetCleaner()
 
     def clean_tweet(self, tweet):
-        return self.tweet_cleaner.preprocess(tweet)
+        return ' '.join(self.tweet_cleaner.preprocess(tweet))
         # return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
 
     def analyse_sentiment(self, tweet):
@@ -67,5 +70,28 @@ class TweetAnalyser:
         df['likes'] = np.array([tweet.favorite_count for tweet in tweets_list])
         df['retweets'] = np.array([tweet.retweet_count for tweet in tweets_list])
 
-
         return df
+
+    def standardise_json_data(self, filename):
+        with open(filename, 'r') as f:
+            for item in f:
+                data = json.loads(item)
+                print(data)
+
+    def count_word_frequency_in_tweets(self, filename):
+        with open(filename, 'r') as f:
+            count_all = Counter()
+            for line in f:
+                tweet = json.loads(line)
+                # Create a list with all the terms
+                terms_all = [term for term in self.tweet_cleaner.preprocess(tweet['text'])]
+                # Update the counter
+                count_all.update(terms_all)
+                # Print the first 5 most frequent words
+                print(count_all.most_common(5))
+
+
+# with open('myfile.json') as f:
+#     data = json.loads("[" + 
+#         f.read().replace("}\n{", "},\n{") + 
+#     "]")

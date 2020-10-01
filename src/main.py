@@ -68,7 +68,7 @@ class TwitterClient:
 
     def store_as_json(self, tweet):
         with open(self.json_file, 'a') as f:
-                json.dump(tweet, f)
+            f.write(json.dumps(tweet))
 
     def prettify_json(filename):
         with open(filename, 'r') as f:
@@ -115,10 +115,14 @@ if __name__ == '__main__':
 
     api = twitter_client.get_twitter_client_api()
 
-    tweets_list = twitter_client.tweets_from_search_query('watching', 25)
+    tweets_list = twitter_client.tweets_from_search_query('streaming', 10)
 
-    df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
-    df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
+    # tweet_analyser.standardise_json_data('test_store.json')
 
-    print(df.head(20))
+    # df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
+    # df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
+
+    # print(df.head(20))
+
+    tweet_analyser.count_word_frequency_in_tweets('test_store.json')
 
