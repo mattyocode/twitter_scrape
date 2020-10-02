@@ -78,7 +78,7 @@ class TweetAnalyser:
 
         return df
 
-    def count_word_frequency_in_tweets(self, filename, keyword):
+    def count_word_frequency_in_tweets(self, filename, keyword, show_bigrams=False):
         stop = self.eliminate_stop_words()
         stop.append(keyword)
         with open(filename) as f:
@@ -89,9 +89,12 @@ class TweetAnalyser:
                 terms_stop = [term for term in self.tweet_cleaner.preprocess(tweet['text']) if term not in stop]
                 terms_bigrams = bigrams(terms_stop)
                 # Update the counter
-                count_all.update(terms_stop)
+                if show_bigrams:
+                    count_all.update(terms_bigrams)
+                else:
+                    count_all.update(terms_stop)
                 # Print the first 5 most frequent words
-            print(count_all.most_common(10))
+            return count_all.most_common(10)
 
     def eliminate_stop_words(self):
         punctuation = list(string.punctuation)
@@ -123,4 +126,4 @@ class TweetAnalyser:
                     com_max.append(((t1, t2), t2_count))
             # Get the most frequent co-occurrences
             terms_max = sorted(com_max, key=operator.itemgetter(1), reverse=True)
-            print(terms_max[:5])
+            print(terms_max[:20])

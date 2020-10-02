@@ -13,6 +13,7 @@ from tweepy.streaming import StreamListener
 
 from config import API_key, API_secret_key, Access_token, Secret_access_token
 from tweet_analyser import TweetAnalyser
+from data_visualiser import DataVisualiser
 
 class TwitterAuth:
 
@@ -122,17 +123,17 @@ if __name__ == '__main__':
 
     twitter_client = TwitterClient(filename="test_store.json")
     tweet_analyser = TweetAnalyser()
+    data_visualiser = DataVisualiser()
 
     api = twitter_client.get_twitter_client_api()
 
-    # tweets_list = twitter_client.tweets_from_search_query('streaming', 1000)
+    tweets_list = twitter_client.tweets_from_search_query('streaming', 100)
 
     # df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
     # df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
 
     # print(df.head(20))
 
-    # tweet_analyser.count_word_frequency_in_tweets('test_store.json', 'streaming')
-
-    tweet_analyser.term_co_occurances('test_store.json')
-
+    # tweet_analyser.term_co_occurances('test_store.json')
+    x =tweet_analyser.count_word_frequency_in_tweets('test_store.json', 'streaming')
+    print(x)
