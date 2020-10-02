@@ -4,6 +4,7 @@ import json
 import tweepy
 import re
 import nltk
+from nltk import bigrams
 from nltk.corpus import stopwords
 import string
 from pprint import pprint
@@ -85,6 +86,7 @@ class TweetAnalyser:
                 tweet = json.loads(line)
                 # Create a list with all the terms
                 terms_stop = [term for term in self.tweet_cleaner.preprocess(tweet['text']) if term not in stop]
+                terms_bigrams = bigrams(terms_stop)
                 # Update the counter
                 count_all.update(terms_stop)
                 # Print the first 5 most frequent words
