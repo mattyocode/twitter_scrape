@@ -4,6 +4,7 @@ import json
 import tweepy
 import re
 import nltk
+from collections import defaultdict
 from nltk import bigrams
 from nltk.corpus import stopwords
 import string
@@ -94,4 +95,32 @@ class TweetAnalyser:
 
     def eliminate_stop_words(self):
         punctuation = list(string.punctuation)
-        return stopwords.words('english') + punctuation + ['rt', 'via', '…', 'I', '’', '่', '️', "let's"]
+        return stopwords.words('english') + punctuation + ['rt', 'via', '…', 'I', '’', '่', '️', "let's", '🇲', '🇦']
+
+    def term_co_occurances(self, filename):
+        stop = self.eliminate_stop_words()
+        with open(filename) as f:
+            com = defaultdict(lambda : defaultdict(int))
+ 
+            for line in f: 
+                tweet = json.loads(line)
+                terms_only = [term for term in self.tweet_cleaner.preprocess(tweet['text']) 
+                            if term not in stop 
+                            and not term.startswith(('#', '@'))]
+            
+                # Build co-occurrence matrix
+                for i in range(len(terms_only)-1):            
+                    for j in range(i+1, len(terms_only)):
+                        w1, w2 = sorted([terms_only[i], terms_only[j]])                
+                        if w1 != w2:
+                            com[w1][w2] += 1
+            
+            com_max = []
+            # For each term, look for the most common co-occurrent terms
+            for t1 in com:
+                t1_max_terms = sorted(com[t1].items(), key=operator.itemgetter(1), reverse=True)[:5]
+                for t2, t2_count in t1_max_terms:
+                    com_max.append(((t1, t2), t2_count))
+            # Get the most frequent co-occurrences
+            terms_max = sorted(com_max, key=operator.itemgetter(1), reverse=True)
+            print(terms_max[:5])
