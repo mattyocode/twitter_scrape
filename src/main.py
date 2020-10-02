@@ -51,6 +51,7 @@ class TwitterClient:
                 if self.tweet_filtering_criteria(tweet):
                     tweets_list.append(tweet)
                     self.store_as_json(tweet._json)
+
             
             # Pulling information from tweets iterable object
             # tweets_list = [[tweet.created_at, tweet.text, tweet.user, 
@@ -67,8 +68,9 @@ class TwitterClient:
             return True
 
     def store_as_json(self, tweet):
-        with open(self.json_file, 'a') as f:
+        with open(self.json_file, 'a+') as f:
             f.write(json.dumps(tweet))
+            f.write('\n')
 
     def prettify_json(filename):
         with open(filename, 'r') as f:
@@ -115,7 +117,7 @@ if __name__ == '__main__':
 
     api = twitter_client.get_twitter_client_api()
 
-    tweets_list = twitter_client.tweets_from_search_query('streaming', 10)
+    tweets_list = twitter_client.tweets_from_search_query('streaming', 50)
 
     # tweet_analyser.standardise_json_data('test_store.json')
 

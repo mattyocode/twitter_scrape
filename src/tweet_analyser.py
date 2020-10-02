@@ -79,7 +79,7 @@ class TweetAnalyser:
                 print(data)
 
     def count_word_frequency_in_tweets(self, filename):
-        with open(filename, 'r') as f:
+        with open(filename) as f:
             count_all = Counter()
             for line in f:
                 tweet = json.loads(line)
@@ -88,7 +88,7 @@ class TweetAnalyser:
                 # Update the counter
                 count_all.update(terms_all)
                 # Print the first 5 most frequent words
-                print(count_all.most_common(5))
+            print(count_all.most_common(5))
 
 
 # with open('myfile.json') as f:
