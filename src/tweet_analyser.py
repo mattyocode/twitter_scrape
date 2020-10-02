@@ -3,10 +3,14 @@ import numpy as np
 import json
 import tweepy
 import re
+import nltk
+from nltk.corpus import stopwords
+import string
 from pprint import pprint
 import operator
 from collections import Counter
 from textblob import TextBlob
+
 
 class TweetCleaner:
     
@@ -32,10 +36,10 @@ class TweetCleaner:
         ]
         tokens_re = re.compile(r'('+'|'.join(regex_str)+')', re.VERBOSE | re.IGNORECASE)
         emoticon_re = re.compile(r'^'+emoticons_str+'$', re.VERBOSE | re.IGNORECASE)
-        return tokens_re.findall(s)
+        return tokens_re.findall(s), tokens_re, emoticon_re
     
-    def preprocess(self, s, lowercase=False):
-        tokens = self.tokenize(s)
+    def preprocess(self, s, lowercase=True):
+        tokens, tokens_re, emoticon_re = self.tokenize(s)
         if lowercase:
             tokens = [token if emoticon_re.search(token) else token.lower() for token in tokens]
         return tokens
@@ -72,26 +76,20 @@ class TweetAnalyser:
 
         return df
 
-    def standardise_json_data(self, filename):
-        with open(filename, 'r') as f:
-            for item in f:
-                data = json.loads(item)
-                print(data)
-
-    def count_word_frequency_in_tweets(self, filename):
+    def count_word_frequency_in_tweets(self, filename, keyword):
+        stop = self.eliminate_stop_words()
+        stop.append(keyword)
         with open(filename) as f:
             count_all = Counter()
             for line in f:
                 tweet = json.loads(line)
                 # Create a list with all the terms
-                terms_all = [term for term in self.tweet_cleaner.preprocess(tweet['text'])]
+                terms_stop = [term for term in self.tweet_cleaner.preprocess(tweet['text']) if term not in stop]
                 # Update the counter
-                count_all.update(terms_all)
+                count_all.update(terms_stop)
                 # Print the first 5 most frequent words
-            print(count_all.most_common(5))
+            print(count_all.most_common(10))
 
-
-# with open('myfile.json') as f:
-#     data = json.loads("[" + 
-#         f.read().replace("}\n{", "},\n{") + 
-#     "]")
+    def eliminate_stop_words(self):
+        punctuation = list(string.punctuation)
+        return stopwords.words('english') + punctuation + ['rt', 'via', '…', 'I', '’', '่', '️', "let's"]
