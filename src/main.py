@@ -3,8 +3,6 @@ import pandas as pd
 import numpy
 import json
 import tweepy
-# import datetime as dt 
-# from twitterscraper import query_tweets
 from matplotlib import pyplot as plt
 import numpy as np
 from tweepy import API, OAuthHandler, Cursor
@@ -54,10 +52,6 @@ class TwitterClient:
                 if self.tweet_filtering_criteria(tweet):
                     tweets_list.append(tweet)
                     self.store_as_json(tweet._json)
-            
-            # Pulling information from tweets iterable object
-            # tweets_list = [[tweet.created_at, tweet.text, tweet.user, 
-            # tweet.favorite_count] for tweet in tweets]
         
         except BaseException as e:
             print('failed on_status:',str(e))
@@ -65,12 +59,10 @@ class TwitterClient:
         
         return tweets_list
 
-    # def tweet_query_date_range(self, search_term, begin_date, end_date, limit, lang):
-    #     tweets_list = []
-    #     tweets = query_tweets(search_term, begindate = begin_date, enddate = end_date, limit = limit, lang = lang)
-    #     for tweet in tweets:
-    #         tweets_list.append(tweet)
-    #         self.store_as_json(tweet._json)
+    def search_public_tweets_keyword(self, keyword):  
+        public_tweets = api.search(keyword)
+        for tweet in public_tweets:
+            print(tweet.text)
 
     def tweet_filtering_criteria(self, tweet):
         if not tweet.retweeted and 'RT @' not in tweet.text:
@@ -127,13 +119,13 @@ if __name__ == '__main__':
 
     api = twitter_client.get_twitter_client_api()
 
-    tweets_list = twitter_client.tweets_from_search_query('streaming', 100)
+    # tweets_list = twitter_client.tweets_from_search_query('streaming', 100)
 
     # df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
     # df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
 
     # print(df.head(20))
 
-    # tweet_analyser.term_co_occurances('test_store.json')
+    tweet_analyser.term_co_occurances('test_store.json')
     x =tweet_analyser.count_word_frequency_in_tweets('test_store.json', 'streaming')
     print(x)
