@@ -98,7 +98,7 @@ class TweetAnalyser:
 
     def eliminate_stop_words(self):
         punctuation = list(string.punctuation)
-        return stopwords.words('english') + punctuation + ['rt', 'via', '…', 'I', '’', '่', '️', "let's", '🇲', '🇦']
+        return stopwords.words('english') + punctuation + ['rt', 'via', '…', 'I', '’', '่', '️', "let's", '🇲', '🇦', '⠀', "i'm"]
 
     def term_co_occurances(self, filename):
         stop = self.eliminate_stop_words()

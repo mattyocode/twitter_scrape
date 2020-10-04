@@ -5,8 +5,7 @@ import json
 import tweepy
 from matplotlib import pyplot as plt
 import numpy as np
-from tweepy import API, OAuthHandler, Cursor
-from tweepy import Stream
+from tweepy import API, OAuthHandler, Cursor, Stream
 from tweepy.streaming import StreamListener
 
 from config import API_key, API_secret_key, Access_token, Secret_access_token
@@ -31,24 +30,23 @@ class TwitterClient:
     def get_twitter_client_api(self):
         return self.twitter_client
 
-    def get_tweets_from_user_timeline_to_array(self, count):
+    def get_tweets_from_user_timeline_to_array(self, count, user_id):
         tweets_list = []
-        for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
+        for tweet in Cursor(self.twitter_client.user_timeline, id=user_id).items(count):
             if not tweet.retweeted and 'RT @' not in tweet.text:
                 tweets_list.append(tweet)
 
         return tweets_list
 
-    def get_tweets_from_user_timeline_to_json(self, count):
-        for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(count):
+    def get_tweets_from_user_timeline_to_json(self, count, user_id):
+        for tweet in Cursor(self.twitter_client.user_timeline, id=user_id).items(count):
             self.store_as_json(tweet._json)
 
     def tweets_from_search_query(self, text_query, count):
         tweets_list = []
-        #Most recent tweets containing text_query keyword
         try:
-            # Creation of query method using parameters
-            for tweet in Cursor(self.twitter_client.search,q=text_query,lang='en').items(count):
+            for tweet in Cursor(self.twitter_client.search,q=text_query,
+                lang='en',wait_on_rate_limit=True).items(count):
                 if self.tweet_filtering_criteria(tweet):
                     tweets_list.append(tweet)
                     self.store_as_json(tweet._json)
@@ -58,11 +56,6 @@ class TwitterClient:
             time.sleep(3)
         
         return tweets_list
-
-    def search_public_tweets_keyword(self, keyword):  
-        public_tweets = api.search(keyword)
-        for tweet in public_tweets:
-            print(tweet.text)
 
     def tweet_filtering_criteria(self, tweet):
         if not tweet.retweeted and 'RT @' not in tweet.text:
@@ -119,7 +112,7 @@ if __name__ == '__main__':
 
     api = twitter_client.get_twitter_client_api()
 
-    # tweets_list = twitter_client.tweets_from_search_query('streaming', 100)
+    tweets_list = twitter_client.tweets_from_search_query('amazing', 10)
 
     # df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
     # df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
@@ -127,5 +120,5 @@ if __name__ == '__main__':
     # print(df.head(20))
 
     tweet_analyser.term_co_occurances('test_store.json')
-    x =tweet_analyser.count_word_frequency_in_tweets('test_store.json', 'streaming')
+    x = tweet_analyser.count_word_frequency_in_tweets('test_store.json', 'streaming')
     print(x)
