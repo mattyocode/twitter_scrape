@@ -30,10 +30,20 @@ def get_tweet():
     print(tweet)
     return tweet
 
-@patch.object(tweepy.API, 'search', return_value=get_tweet())
+@patch.object(tweepy.API, 'search', side_effect=get_tweet())
+def test_tweets_from_search_query(mock_method):
+    subject2 = TwitterClient()
+    tweets_list = subject2.tweets_from_search_query('amazing', 1)
+    tweet = tweets_list[0]
+    assert tweet.id == 1312172333109440512
+
+# TODO create mock cursor with patched api that sends get_tweet
+def mock_cursor():
+
+
+@patch.object(tweepy.API, 'get_status', return_value=get_tweet())
 def test_get_tweets_timeline_to_arr(mock_method):
     subject2 = TwitterClient()
-    tweets_list = subject2.get_tweets_from_user_timeline_to_array(count=1, user_id='mattyotweet')
-    print(tweets_list)
+    tweets_list = subject2.get_tweets_from_user_timeline_to_array(count=1, user_id=None)
     tweet = tweets_list[0]
     assert tweet.id == 1312172333109440512
