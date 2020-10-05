@@ -47,9 +47,8 @@ class TwitterClient:
         try:
             for tweet in Cursor(self.twitter_client.search,q=text_query,
                 lang='en',wait_on_rate_limit=True).items(count):
-                if self.tweet_filtering_criteria(tweet):
-                    tweets_list.append(tweet)
-                    self.store_as_json(tweet._json)
+                tweets_list.append(tweet)
+                self.store_as_json(tweet._json)
         
         except BaseException as e:
             print('failed on_status:',str(e))
@@ -58,8 +57,12 @@ class TwitterClient:
         return tweets_list
 
     def tweet_filtering_criteria(self, tweet):
-        if not tweet.retweeted and 'RT @' not in tweet.text:
-            return True
+        try:
+            if not tweet.retweeted and 'RT @' not in tweet.text:
+                return True
+        except:
+            print("Tweet object has no retweet attribute")
+        
 
     def store_as_json(self, tweet):
         with open(self.json_file, 'a+') as f:
