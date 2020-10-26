@@ -30,7 +30,7 @@ class TwitterClient:
     def get_twitter_client_api(self):
         return self.twitter_client
 
-    def tweets_from_user_timeline(self, count, user_id):
+    def tweets_from_user_timeline(self, user_id, count):
         tweets_list = []
         for tweet in Cursor(self.twitter_client.user_timeline, id=user_id).items(count):
             if self.tweet_filtering_criteria(tweet):
@@ -43,7 +43,7 @@ class TwitterClient:
         tweets_list = []
         try:
             for tweet in Cursor(self.twitter_client.search,q=text_query,
-                lang='en',wait_on_rate_limit=True).items(count):
+                lang='en').items(count):
                 if self.tweet_filtering_criteria(tweet):
                     tweets_list.append(tweet)
                     self.store_as_json(tweet._json)
@@ -113,7 +113,9 @@ if __name__ == '__main__':
 
     api = twitter_client.get_twitter_client_api()
 
-    tweets_list = twitter_client.tweets_from_search_query('amazing', 10)
+    tweets_list = twitter_client.tweets_from_user_timeline('rickygervais', 100)
+
+    # tweets_list = twitter_client.tweets_from_search_query('#streaming Filter:links', 1000)
 
     # df = tweet_analyser.create_dataframe_from_tweetslist(tweets_list)
     # df['sentiment'] = np.array([tweet_analyser.analyse_sentiment(tweet) for tweet in df['tweets_list']])
@@ -122,4 +124,4 @@ if __name__ == '__main__':
 
     tweet_analyser.term_co_occurances('test_store.json')
     x = tweet_analyser.count_word_frequency_in_tweets('test_store.json', 'streaming')
-    print(x)
+    print('\n', x)

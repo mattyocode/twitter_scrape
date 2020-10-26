@@ -25,7 +25,7 @@ def get_mock_cursor():
         for line in f:
             tweet = json.loads(line)
             mock_status = MagicMock()
-            mock_status.__iter__.return_value = tweet
+            mock_status.__iter__.json.return_value = tweet
             mock_cursor = MagicMock()
             mock_cursor.__iter__.return_value = mock_status
     return mock_cursor
@@ -33,6 +33,7 @@ def get_mock_cursor():
 @patch.object(Cursor, 'items', return_value=get_mock_cursor())
 def test_tweets_from_search_query(mock_cursor):
     subject2 = TwitterClient()
+    mock_filter.return_value = True
     tweets_list = subject2.tweets_from_search_query('amazing', 1)
     assert tweets_list[0]["id"] == 1312799588156407809
     assert mock_cursor.called
